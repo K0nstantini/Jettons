@@ -260,7 +260,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
         int sign = in_msg_body~load_uint(1);
         int num_part = in_msg_body~load_uint(32);
         int denom_part = in_msg_body~load_uint(32);
-        throw_unless(77, (sign == 1) | (num_part / denom_part <= 100) );
+        throw_unless(77, (sign == 1) | (num_part * 100 / denom_part <= 100) );
         save_data(total_supply, admin_address, content, jetton_wallet_code, sign, num_part, denom_part);
         return ();
     }
