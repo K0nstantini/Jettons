@@ -19,31 +19,31 @@ const gas_consumption = 10000000; ;; 0.01 TON
 (int, slice, cell, cell, int, int, int) load_data() inline {
     slice ds = get_data().begin_parse();
     return (
-        ds~load_coins(), ;; total_supply
-        ds~load_msg_addr(), ;; admin_address
-        ds~load_ref(), ;; content
-        ds~load_ref(), ;; jetton_wallet_code
-        ds~load_uint(1), ;; ks: royalty sign
-        ds~load_uint(32), ;; ks: royalty numerator part
-        ds~load_uint(32) ;; ks: royalty denominator part
+            ds~load_coins(), ;; total_supply
+            ds~load_msg_addr(), ;; admin_address
+            ds~load_ref(), ;; content
+            ds~load_ref(), ;; jetton_wallet_code
+            ds~load_uint(1), ;; ks: royalty sign
+            ds~load_uint(32), ;; ks: royalty numerator part
+            ds~load_uint(32) ;; ks: royalty denominator part
     );
 }
 
 () save_data(
-    int total_supply,
-    slice admin_address,
-    cell content,
-    cell jetton_wallet_code,
-    int royalty_sign,
-    int royalty_num_part,
-    int royalty_denom_part
+        int total_supply,
+        slice admin_address,
+        cell content,
+        cell jetton_wallet_code,
+        int royalty_sign,
+        int royalty_num_part,
+        int royalty_denom_part
 ) impure inline {
     set_data(begin_cell()
             .store_coins(total_supply)
             .store_slice(admin_address)
             .store_ref(content)
             .store_ref(jetton_wallet_code)
-        ;; ks: royalty data
+            ;; ks: royalty data
             .store_uint(royalty_sign, 1)
             .store_uint(royalty_num_part, 32)
             .store_uint(royalty_denom_part, 32)
@@ -85,14 +85,14 @@ const gas_consumption = 10000000; ;; 0.01 TON
     int query_id = in_msg_body~load_uint(64);
 
     (
-        int total_supply,
-        slice admin_address,
-        cell content,
-        cell jetton_wallet_code,
-        ;; ks: royalty data
-        int royalty_sign,
-        int royalty_num_part,
-        int royalty_denom_part
+            int total_supply,
+            slice admin_address,
+            cell content,
+            cell jetton_wallet_code,
+            ;; ks: royalty data
+            int royalty_sign,
+            int royalty_num_part,
+            int royalty_denom_part
     ) = load_data();
 
     if (op == op::mint()) {
@@ -112,7 +112,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
         int jetton_amount = in_msg_body~load_coins();
         slice from_address = in_msg_body~load_msg_addr();
         throw_unless(74,
-            equal_slices(calculate_user_jetton_wallet_address(from_address, my_address(), jetton_wallet_code), sender_address)
+                equal_slices(calculate_user_jetton_wallet_address(from_address, my_address(), jetton_wallet_code), sender_address)
         );
         save_data(total_supply - jetton_amount, admin_address, content, jetton_wallet_code, royalty_sign, royalty_num_part, royalty_denom_part);
         slice response_address = in_msg_body~load_msg_addr();
@@ -174,6 +174,9 @@ const gas_consumption = 10000000; ;; 0.01 TON
         slice from_address = in_msg_body~load_msg_addr();
         throw_unless(76, equal_slices(calculate_user_jetton_wallet_address(from_address, my_address(), jetton_wallet_code), sender_address));
 
+        ;; cell state_init = calculate_jetton_wallet_state_init(from_address, my_address(), jetton_wallet_code);
+        ;; throw_unless(76, equal_slices(calculate_jetton_wallet_address(state_init), sender_address));
+
         slice to_wallet_address = in_msg_body~load_msg_addr();
         cell state_init_to = in_msg_body~load_ref();
         cell state_init_from = in_msg_body~load_ref();
@@ -185,6 +188,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
         int award = 0;
         int send_mode = 64;
         int msg_value_to = 0;
+
 
         if (royalty_sign == 0) {
             jetton_amount -= royalty;
@@ -201,8 +205,8 @@ const gas_consumption = 10000000; ;; 0.01 TON
                 msg_value -= (storage_fee + gas_consumption);
 
                 int fwd_count = forward_ton_amount ?  2 : 1;
-                msg_value_to = forward_ton_amount + fwd_count * fwd_fee + 
-                (2 * gas_consumption + min_tons_for_storage);
+                msg_value_to = forward_ton_amount + fwd_count * fwd_fee +
+                        (2 * gas_consumption + min_tons_for_storage);
             }
         }
 
@@ -256,6 +260,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
         int sign = in_msg_body~load_uint(1);
         int num_part = in_msg_body~load_uint(32);
         int denom_part = in_msg_body~load_uint(32);
+        throw_unless(77, (sign == 1) | (num_part / denom_part <= 100) );
         save_data(total_supply, admin_address, content, jetton_wallet_code, sign, num_part, denom_part);
         return ();
     }
